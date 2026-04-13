@@ -1,0 +1,70 @@
+.env
+*/config/*
+*/cache/*
+*/workspace/*
+
+# Pi-Hole
+pihole/config/etc-pihole/*
+pihole/config/etc-dnsmasq.d/*
+pihole/unbound/dev/*
+pihole/unbound/var/*
+pihole/unbound/unbound.pid
+
+# Traefik
+secrets/traefik/cf_api_token
+acme.json
+
+# Portainer
+portainer/data/*
+
+# Gitlab
+gitlab/gitlab/*
+
+# Gitlab Runner
+gitlab-runner/config/*
+gitlab-runner/certs/*
+gitlab-runner/gitlab-runner/*
+
+
+# Gitea
+gitea/act_runner/*
+gitea/gitea/*
+gitea/postgres/*
+
+# Wordpress
+wordpress/db_data/*
+wordpress/wp_data/*
+
+# Net Alert
+net-alert/data/*
+
+# Handbrake
+handbrake/appdata/*
+
+# BookStack
+bookstack/bookstack_db_data/*
+
+# Linkwarden
+linkwarden/data
+linkwarden/pgdata
+linkwarden/meili_data
+
+# NocoDB
+airtable/data/*
+
+# Forgejo
+forgejo/data
+forgejo/forgejo/*
+forgejo/postgres
+
+# Mailpit
+mailpit/data/*
+
+# MS SQL Server
+sqlserver/data/*
+sqlserver/log/*
+sqlserver/secrets/*
+
+# Postgres
+postgres/pgadmin
+postgres/postgresql

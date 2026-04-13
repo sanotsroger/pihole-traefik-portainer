@@ -1,0 +1,18 @@
+http:
+  #region routers
+  routers:
+    subdomain:
+      entryPoints:
+        - "https"
+      rule: "Host(`subdomain.domain.com`)"
+      tls: {}
+      service: subdomain
+
+  #endregion
+  #region services
+  services:
+    subdomain:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.45:3000"
+        passHostHeader: true

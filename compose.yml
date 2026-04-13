@@ -1,0 +1,20 @@
+networks:
+  proxy:
+    external: true
+    ipam:
+      config:
+        - subnet: ${CONTAINERS_SUBNET}/24
+  host:
+    external: true
+    driver: host
+
+## Secrets
+secrets:
+  cf_api_token:
+    file: ./secrets/traefik/cf_api_token
+
+## Services
+include:
+  - portainer/compose.yml
+  - pihole/compose.yml
+  - traefik/compose.yml

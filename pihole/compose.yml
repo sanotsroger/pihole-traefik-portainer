@@ -1,0 +1,52 @@
+services:
+  pihole:
+    container_name: ${CT_PIHOLE}
+    image: pihole/pihole:latest
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 67:67/udp
+      - 8001:80/tcp
+    environment:
+      TZ: America/Sao_Paulo
+      FTLCONF_dns_domain: pihole
+      FTLCONF_webserver_interface_theme: default-darker
+      FTLCONF_dns_upstreams: ${CT_UNBOUND_IP}#${CT_UNBOUND_PORT}
+    volumes:
+      - ./config/etc-pihole:/etc/pihole
+      - ./config/etc-dnsmasq.d:/etc/dnsmasq.d
+    cap_add:
+      # See https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+      # Required if you are using Pi-hole as your DHCP server, else not needed
+      - NET_ADMIN
+      # Required if you are using Pi-hole as your NTP client to be able to set the host's system time
+      - SYS_TIME
+      # Optional, if Pi-hole should get some more processing time
+      - SYS_NICE
+    restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: ${CT_PIHOLE_IP}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pihole.rule=Host(`pihole.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.pihole.entrypoints=https"
+      - "traefik.http.routers.pihole.tls=true"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+    depends_on:
+      - unbound
+
+  unbound:
+    container_name: unbound
+    image: mvance/unbound:latest
+    networks:
+      proxy:
+        ipv4_address: ${CT_UNBOUND_IP}
+    volumes:
+      - ./unbound:/opt/unbound/etc/unbound
+    #ports:
+    #  - "${CT_UNBOUND_PORT}:53/tcp"
+    #  - "${CT_UNBOUND_PORT}:53/udp"
+    healthcheck:
+      test: ["NONE"]
+    restart: unless-stopped
