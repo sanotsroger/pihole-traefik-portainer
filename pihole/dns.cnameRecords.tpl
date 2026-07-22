@@ -1,0 +1,9 @@
+pihole.${DOMAIN_NAME},docker.local
+traefik.${DOMAIN_NAME},docker.local
+portainer.${DOMAIN_NAME},docker.local
+collify.${DOMAIN_NAME},docker.local
+pages.${DOMAIN_NAME},docker.local
+registry.${DOMAIN_NAME},docker.local
+gitlab.${DOMAIN_NAME},docker.local
+pve.${DOMAIN_NAME},docker.local
+auth.${DOMAIN_NAME},docker.local

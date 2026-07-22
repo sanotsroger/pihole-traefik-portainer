@@ -12,6 +12,14 @@ services:
       FTLCONF_dns_domain: pihole
       FTLCONF_webserver_interface_theme: default-darker
       FTLCONF_dns_upstreams: ${CT_UNBOUND_IP}#${CT_UNBOUND_PORT}
+      # "Bind only interface" DNS listening mode
+      FTLCONF_dns_listeningMode: ${PIHOLE_LISTENING_MODE}
+      # Local A record for docker.local -> real host IP
+      FTLCONF_dns_hosts: "${PIHOLE_HOST_IP} docker.local"
+      FTLCONF_dhcp_start: ${PIHOLE_DHCP_START}
+    # FTLCONF_dns_cnameRecords, generated from ./dns.cnameRecords by ./render-templates.sh
+    env_file:
+      - ./cname.env
     volumes:
       - ./config/etc-pihole:/etc/pihole
       - ./config/etc-dnsmasq.d:/etc/dnsmasq.d

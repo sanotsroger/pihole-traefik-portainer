@@ -71,4 +71,20 @@ while IFS= read -r -d '' tpl; do
   count=$((count + 1))
 done < <(find "$TEMPLATES_DIR" -maxdepth 1 -name '*.tpl' -print0)
 
+# pihole/dns.cnameRecords.tpl is a plain-text list (one "<cname>,<target>"
+# record per line, blank lines and "#" comments ignored, any ${VAR} defined in
+# .env can be used per line, e.g. "pihole.${DOMAIN_NAME},docker.local").
+# It's envsubst'd and turned into pihole/cname.env, an env_file loaded by
+# pihole/compose.yml that sets FTLCONF_dns_cnameRecords (FTL's array env vars
+# are ";"-delimited). Like the Authelia configuration.yml.tpl above, the
+# output has no user-editable content of its own, so it's always re-rendered.
+CNAME_TPL="$ROOT_DIR/pihole/dns.cnameRecords.tpl"
+CNAME_ENV="$ROOT_DIR/pihole/cname.env"
+if [[ -f "$CNAME_TPL" ]]; then
+  cnames="$(envsubst "$SUBST_VARS" < "$CNAME_TPL" | grep -vE '^[[:space:]]*(#|$)' | paste -sd ';' -)"
+  printf 'FTLCONF_dns_cnameRecords=%s\n' "$cnames" > "$CNAME_ENV"
+  echo "rendered: ${CNAME_ENV#"$ROOT_DIR"/} (from pihole/dns.cnameRecords.tpl)"
+  count=$((count + 1))
+fi
+
 echo "$count template(s) rendered."

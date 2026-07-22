@@ -19,6 +19,7 @@ Rode esse script sempre que criar um `.tpl` novo ou mudar `DOMAIN_NAME` no `.env
 - `traefik/data/templates/*.yml.tpl` → renderizado pra `traefik/data/config.d/<nome>.yml`. **Nunca sobrescreve** um arquivo que já existe em `config.d/` (esses arquivos costumam ser editados à mão depois, com IP/porta reais do backend).
 - `authelia/config/configuration.yml.tpl` → sempre re-renderizado em `authelia/config/configuration.yml` (só tem placeholder de domínio, sem edição manual).
 - `authelia/config/users_database.yml.tpl` → renderizado **só na primeira vez** em `authelia/config/users_database.yml` (guarda credencial real depois de editado).
+- `pihole/dns.cnameRecords.tpl` → sempre re-renderizado em `pihole/cname.env` (ver seção [Pi-Hole](#pi-hole) abaixo).
 
 ## Network
 
@@ -28,7 +29,7 @@ Create network external.
 docker network create --gateway 172.42.0.1 --subnet 172.42.0.0/24 proxy
 ```
 
-## Domain Pi-Hole
+## Pi-Hole
 
 Edit `/etc/hosts`.
 
@@ -42,20 +43,22 @@ Added line
 127.0.0.1  docker.local
 ```
 
-Create DNS Records [A/AAAA]
+O `pihole/compose.yml` já aplica via variáveis de ambiente `FTLCONF_*` (lidas a cada start pelo
+FTL, o que deixa os campos correspondentes read-only na UI web) os passos que antes eram feitos
+manualmente na UI:
 
-| Domain       | Ip          |
-| ------------ | ----------- |
-| docker.local | 192.168.0.x |
+- **Local CNAME Records** (`dns.cnameRecords`): edite `pihole/dns.cnameRecords.tpl` — uma lista em
+  texto simples, um registro `<cname>,<target>` por linha (linhas em branco e começadas com `#`
+  são ignoradas), podendo usar qualquer variável definida no `.env` em cada linha, ex.:
+  `pihole.${DOMAIN_NAME},docker.local` — e rode `./render-templates.sh`, que gera
+  `pihole/cname.env` (carregado pelo `env_file` do serviço `pihole`).
+- **Bind only interface** (`dns.listeningMode`): variável `PIHOLE_LISTENING_MODE` no `.env`
+  (default `BIND`).
+- **`dns.hosts`** (IP real da máquina + `docker.local`): variável `PIHOLE_HOST_IP` no `.env`.
+- **`dhcp.start`**: variável `PIHOLE_DHCP_START` no `.env`.
 
-Local CNAME Records
-
-| Domain                 | Target       |
-| ---------------------- | ------------ |
-| pihole.domain.com      | docker.local |
-| portainer.domain.com   | docker.local |
-| traefik.domain.com     | docker.local |
-| auth.domain.com        | docker.local |
+Depois de ajustar o `.env` e/ou `pihole/dns.cnameRecords`, rode `./render-templates.sh` e suba (ou
+reinicie) o container do Pi-hole.
 
 ## Clouflare
 
@@ -74,18 +77,6 @@ mkdir -p traefik/data && cd traefik/data && touch acme.json && chmod 600 acme.js
 ```
 
 Pra expor um novo host externo (não gerenciado pelo Docker, ex: Proxmox, GitLab), crie um arquivo em `traefik/data/templates/<nome>.yml.tpl` usando `${DOMAIN_NAME}` no `Host()`, seguindo os exemplos existentes (`pve.yml.tpl`, `registry.yml.tpl`, etc.), e rode `./render-templates.sh` pra gerar `traefik/data/config.d/<nome>.yml`.
-
-## Pihole Tips
-
-![alt text](assets/images/pihole-interface-settings.png)
-
-Configura o ip real da maquina local
-
-![alt text](assets/images/config-ip-01.png)
-
-![alt text](assets/images/config-ip-02.png)
-
-![alt text](assets/images/config-ip-03.png)
 
 ## Portainer
 
