@@ -1,0 +1,28 @@
+http:
+  routers:
+    gitlab:
+      entryPoints:
+        - "https"
+      rule: "Host(`gitlab.domain.com`)"
+      tls: {}
+      service: gitlab
+  services:
+    gitlab:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.45"
+        passHostHeader: true
+
+tcp:
+  routers:
+    gitlab-ssh:
+      entryPoints:
+        - "ssh-gitlab"
+      rule: "HostSNI(`*`)"
+      service: gitlab-ssh
+
+  services:
+    gitlab-ssh:
+      loadBalancer:
+        servers:
+          - address: "10.0.0.45:24"

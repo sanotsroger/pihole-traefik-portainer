@@ -1,14 +1,14 @@
 http:
   routers:
-    subdomain:
+    pve:
       entryPoints:
         - "https"
-      rule: "Host(`subdomain.domain.com`)"
+      rule: "Host(`pve.domain.com`)"
       tls: {}
-      service: subdomain
+      service: pve
   services:
-    subdomain:
+    pve:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45:3000"
+          - url: "http://10.0.0.45:8006"
         passHostHeader: true

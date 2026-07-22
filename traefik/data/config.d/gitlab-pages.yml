@@ -1,14 +1,14 @@
 http:
   routers:
-    subdomain:
+    gitlab-pages:
       entryPoints:
         - "https"
-      rule: "Host(`subdomain.domain.com`)"
+      rule: "Host(`pages.domain.com`)"
       tls: {}
-      service: subdomain
+      service: gitlab-pages
   services:
-    subdomain:
+    gitlab-pages:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45:3000"
+          - url: "http://10.0.0.45"
         passHostHeader: true

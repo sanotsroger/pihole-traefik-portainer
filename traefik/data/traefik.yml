@@ -17,6 +17,10 @@ entryPoints:
     address: ":53/udp"
   ping:
     address: ":8082"
+  ssh-gitlab:
+    address: ":24"
+  mailpit-smtp:
+    address: ":1025"
 
 ping:
   entryPoint: "ping"
