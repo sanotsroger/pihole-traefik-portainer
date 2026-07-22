@@ -3,14 +3,14 @@ http:
     gitlab:
       entryPoints:
         - "https"
-      rule: "Host(`gitlab.domain.com`)"
+      rule: "Host(`gitlab.${DOMAIN_NAME}`)"
       tls: {}
       service: gitlab
   services:
     gitlab:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45"
+          - url: "http://${GITLAB_IP}"
         passHostHeader: true
 
 tcp:
@@ -25,4 +25,4 @@ tcp:
     gitlab-ssh:
       loadBalancer:
         servers:
-          - address: "10.0.0.45:24"
+          - address: "${GITLAB_IP}:${GITLAB_SSH_PORT}"

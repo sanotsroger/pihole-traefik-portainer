@@ -3,12 +3,12 @@ http:
     coolify:
       entryPoints:
         - "https"
-      rule: "Host(`coolify.domain.com`)"
+      rule: "Host(`coolify.${DOMAIN_NAME}`)"
       tls: {}
       service: coolify
   services:
     coolify:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45"
+          - url: "http://${COOLIFY_IP}"
         passHostHeader: true

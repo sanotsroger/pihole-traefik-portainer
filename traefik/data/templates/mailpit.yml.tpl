@@ -3,14 +3,14 @@ http:
     mailpit:
       entryPoints:
         - "https"
-      rule: "Host(`mailpit.domain.com`)"
+      rule: "Host(`mailpit.${DOMAIN_NAME}`)"
       tls: {}
       service: mailpit
   services:
     mailpit:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45"
+          - url: "http://${MAILPIT_IP}"
         passHostHeader: true
 
 tcp:

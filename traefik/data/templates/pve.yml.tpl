@@ -1,14 +1,14 @@
 http:
   routers:
-    registry:
+    pve:
       entryPoints:
         - "https"
-      rule: "Host(`registry.domain.com`)"
+      rule: "Host(`pve.${DOMAIN_NAME}`)"
       tls: {}
-      service: registry
+      service: pve
   services:
-    registry:
+    pve:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45"
+          - url: "http://${PVE_IP}"
         passHostHeader: true

@@ -1,14 +1,14 @@
 http:
   routers:
-    subdomain:
+    registry:
       entryPoints:
         - "https"
-      rule: "Host(`subdomain.domain.com`)"
+      rule: "Host(`registry.${DOMAIN_NAME}`)"
       tls: {}
-      service: subdomain
+      service: registry
   services:
-    subdomain:
+    registry:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45:3000"
+          - url: "http://${GITLAB_REGISTRY_IP}"
         passHostHeader: true

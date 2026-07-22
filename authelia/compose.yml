@@ -1,0 +1,106 @@
+volumes:
+  postgres_data:
+  redis_data:
+
+services:
+  authelia:
+    image: authelia/authelia:${AUTHELIA_VERSION}
+    container_name: ${CT_AUTHELIA}
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    networks:
+      proxy:
+        ipv4_address: ${CT_AUTHELIA_IP}
+    environment:
+      TZ: ${TIMEZONE}
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
+      AUTHELIA_SESSION_REDIS_PASSWORD_FILE: /run/secrets/authelia_redis_password
+      AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/authelia_storage_password
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
+    secrets:
+      - authelia_jwt_secret
+      - authelia_session_secret
+      - authelia_redis_password
+      - authelia_storage_password
+      - authelia_storage_encryption_key
+    volumes:
+      - ./config:/config
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9091/api/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.entrypoints=http"
+      - "traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN_NAME}`)"
+      - "traefik.http.middlewares.authelia-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.authelia.middlewares=authelia-https-redirect"
+      - "traefik.http.routers.authelia-secure.entrypoints=https"
+      - "traefik.http.routers.authelia-secure.rule=Host(`auth.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.authelia-secure.tls=true"
+      - "traefik.http.routers.authelia-secure.tls.certresolver=cloudflare"
+      - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+      # Reusable forward-auth middleware. Reference it on other services as `authelia@docker`
+      # e.g. traefik.http.routers.portainer.middlewares=authelia@docker
+      - "traefik.http.middlewares.authelia.forwardauth.address=http://${CT_AUTHELIA_IP}:9091/api/verify?rd=https://auth.${DOMAIN_NAME}"
+      - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+    depends_on:
+      - authelia-postgres
+      - authelia-redis
+
+  authelia-postgres:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: ${CT_AUTHELIA_POSTGRES}
+    restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: ${CT_AUTHELIA_POSTGRES_IP}
+    environment:
+      TZ: ${TIMEZONE}
+      POSTGRES_DB: authelia
+      POSTGRES_USER: authelia
+      POSTGRES_PASSWORD_FILE: /run/secrets/authelia_storage_password
+    secrets:
+      - authelia_storage_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authelia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  authelia-redis:
+    image: redis:${REDIS_VERSION}
+    container_name: ${CT_AUTHELIA_REDIS}
+    restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: ${CT_AUTHELIA_REDIS_IP}
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        'redis-server --requirepass "$$(cat /run/secrets/authelia_redis_password)"',
+      ]
+    secrets:
+      - authelia_redis_password
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

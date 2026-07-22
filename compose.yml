@@ -12,9 +12,20 @@ networks:
 secrets:
   cf_api_token:
     file: ./secrets/traefik/cf_api_token
+  authelia_jwt_secret:
+    file: ./secrets/authelia/jwt_secret
+  authelia_session_secret:
+    file: ./secrets/authelia/session_secret
+  authelia_storage_password:
+    file: ./secrets/authelia/storage_password
+  authelia_storage_encryption_key:
+    file: ./secrets/authelia/storage_encryption_key
+  authelia_redis_password:
+    file: ./secrets/authelia/redis_password
 
 ## Services
 include:
   - portainer/compose.yml
   - pihole/compose.yml
   - traefik/compose.yml
+  - authelia/compose.yml

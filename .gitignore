@@ -13,6 +13,23 @@ pihole/unbound/unbound.pid
 # Traefik
 secrets/traefik/cf_api_token
 acme.json
+# traefik/data/templates/*.yml.tpl are the committed templates; the files
+# rendered from them into config.d/ (by ./render-templates.sh) are
+# environment-specific (hand-edited afterwards) and ignored.
+traefik/data/config.d/*.yml
+
+# Authelia
+secrets/authelia/jwt_secret
+secrets/authelia/session_secret
+secrets/authelia/storage_password
+secrets/authelia/storage_encryption_key
+secrets/authelia/redis_password
+authelia/postgres/*
+authelia/redis/*
+# authelia/config/* is already covered by the top-level "*/config/*" rule;
+# re-include the templates so they stay versioned like the *.yml.tpl above.
+!authelia/config/configuration.yml.tpl
+!authelia/config/users_database.yml.tpl
 
 # Portainer
 portainer/data/*

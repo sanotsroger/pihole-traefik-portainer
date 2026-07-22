@@ -3,12 +3,12 @@ http:
     gitlab-pages:
       entryPoints:
         - "https"
-      rule: "Host(`pages.domain.com`)"
+      rule: "Host(`pages.${DOMAIN_NAME}`)"
       tls: {}
       service: gitlab-pages
   services:
     gitlab-pages:
       loadBalancer:
         servers:
-          - url: "http://10.0.0.45"
+          - url: "http://${GITLAB_PAGES_IP}"
         passHostHeader: true
