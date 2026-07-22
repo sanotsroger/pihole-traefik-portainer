@@ -6,3 +6,4 @@ pages.domain.com.br,docker.local
 registry.domain.com.br,docker.local
 gitlab.domain.com.br,docker.local
 pve.domain.com.br,docker.local
+auth.domain.com.br,docker.local

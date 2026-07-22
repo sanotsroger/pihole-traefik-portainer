@@ -1,7 +1,3 @@
-volumes:
-  postgres_data:
-  redis_data:
-
 services:
   authelia:
     image: authelia/authelia:${AUTHELIA_VERSION}
@@ -75,7 +71,7 @@ services:
     secrets:
       - authelia_storage_password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U authelia"]
       interval: 10s
@@ -98,7 +94,7 @@ services:
     secrets:
       - authelia_redis_password
     volumes:
-      - redis_data:/data
+      - ./redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
