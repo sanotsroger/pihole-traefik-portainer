@@ -90,10 +90,14 @@ docker logs portainer -f
 
 Sobe Authelia + Postgres (storage) + Redis (sessão), tudo isolado na pasta `authelia/`.
 
-Cria os diretórios de dados:
+Cria os diretórios de dados com o dono correto. As imagens `postgres`/`redis` rodam como o
+usuário interno `postgres`/`redis` (UID:GID `999:999`, não root e não o `PUID:PGID` do host), e
+esses serviços não usam bind mount com `user:` como o `authelia` usa pra `./config` — se o
+diretório for criado com outro dono, o container não consegue escrever no volume e falha ao subir:
 
 ```bash
 mkdir -p authelia/postgres authelia/redis
+sudo chown 999:999 authelia/postgres authelia/redis
 ```
 
 Gera os secrets reais (nunca commitados, veja `.gitignore`) com o script:
