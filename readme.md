@@ -5,7 +5,7 @@
 Create network external.
 
 ```shell
-docker network create --gateway 172.16.0.1 --subnet 172.16.0.0/24 proxy
+docker network create --gateway 172.42.0.1 --subnet 172.42.0.0/24 proxy
 ```
 
 ## Domain Pi-Hole
@@ -63,3 +63,11 @@ Configura o ip real da maquina local
 ![alt text](assets/images/config-ip-02.png)
 
 ![alt text](assets/images/config-ip-03.png)
+
+## Portainer
+
+Verifique os logs para obter o `setup_token`.
+
+```bash
+docker logs portainer -f
+```

@@ -1,0 +1,8 @@
+pihole.domain.com.br,docker.local
+traefik.domain.com.br,docker.local
+portainer.domain.com.br,docker.local
+collify.domain.com.br,docker.local
+pages.domain.com.br,docker.local
+registry.domain.com.br,docker.local
+gitlab.domain.com.br,docker.local
+pve.domain.com.br,docker.local
