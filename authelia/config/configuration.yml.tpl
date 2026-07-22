@@ -29,6 +29,8 @@ access_control:
   rules:
     - domain: "auth.${DOMAIN_NAME}"
       policy: bypass
+    - domain: "*.${DOMAIN_NAME}"
+      policy: one_factor
 
 session:
   cookies:
