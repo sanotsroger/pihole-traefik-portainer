@@ -26,12 +26,18 @@ secrets/authelia/session_secret
 secrets/authelia/storage_password
 secrets/authelia/storage_encryption_key
 secrets/authelia/redis_password
+secrets/authelia/ldap_password
 authelia/postgres/*
 authelia/redis/*
 # authelia/config/* is already covered by the top-level "*/config/*" rule;
 # re-include the templates so they stay versioned like the *.yml.tpl above.
 !authelia/config/configuration.yml.tpl
-!authelia/config/users_database.yml.tpl
+
+# LLDAP
+secrets/lldap/jwt_secret
+secrets/lldap/key_seed
+secrets/lldap/user_pass
+lldap/data/*
 
 # Portainer
 portainer/data/*

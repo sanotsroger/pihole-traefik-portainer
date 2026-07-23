@@ -22,10 +22,19 @@ secrets:
     file: ./secrets/authelia/storage_encryption_key
   authelia_redis_password:
     file: ./secrets/authelia/redis_password
+  authelia_ldap_password:
+    file: ./secrets/authelia/ldap_password
+  lldap_jwt_secret:
+    file: ./secrets/lldap/jwt_secret
+  lldap_key_seed:
+    file: ./secrets/lldap/key_seed
+  lldap_user_pass:
+    file: ./secrets/lldap/user_pass
 
 ## Services
 include:
   - portainer/compose.yml
   - pihole/compose.yml
   - traefik/compose.yml
+  - lldap/compose.yml
   - authelia/compose.yml

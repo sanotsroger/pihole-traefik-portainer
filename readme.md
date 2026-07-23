@@ -18,7 +18,6 @@ Rode esse script sempre que criar um `.tpl` novo ou mudar `DOMAIN_NAME` no `.env
 
 - `traefik/data/templates/*.yml.tpl` → renderizado pra `traefik/data/config.d/<nome>.yml`. **Nunca sobrescreve** um arquivo que já existe em `config.d/` (esses arquivos costumam ser editados à mão depois, com IP/porta reais do backend).
 - `authelia/config/configuration.yml.tpl` → sempre re-renderizado em `authelia/config/configuration.yml` (só tem placeholder de domínio, sem edição manual).
-- `authelia/config/users_database.yml.tpl` → renderizado **só na primeira vez** em `authelia/config/users_database.yml` (guarda credencial real depois de editado).
 - `pihole/dns.cnameRecords.tpl` → sempre re-renderizado em `pihole/cname.env` (ver seção [Pi-Hole](#pi-hole) abaixo).
 
 ## Network
@@ -60,8 +59,17 @@ manualmente na UI:
   aplicada no primeiro start (ou se `pihole/config/etc-pihole` for apagado) — trocar o valor no
   `.env` depois disso não muda a senha já persistida.
 
-Depois de ajustar o `.env` e/ou `pihole/dns.cnameRecords`, rode `./render-templates.sh` e suba (ou
-reinicie) o container do Pi-hole.
+Depois de ajustar o `.env` e/ou `pihole/dns.cnameRecords`, rode `./pihole/reload.sh`.
+
+**Por que não basta reiniciar:** campos vindos de `FTLCONF_*` (como `dns.cnameRecords`) ficam
+travados para edição em tempo real — o próprio `pihole-FTL` recusa alterá-los via CLI/API
+enquanto vierem de env var, e só são reaplicados quando o container é **recriado** com o env
+atualizado. `docker compose restart pihole` reexecuta o entrypoint, mas com as variáveis de
+ambiente que já estavam congeladas desde a criação do container (`pihole/cname.env` é um
+`env_file`, lido só no `docker compose up`/`create`, nunca em um `restart`) — por isso um CNAME
+novo no `.tpl` não aparece até o container ser recriado. `./pihole/reload.sh` automatiza isso:
+roda `./render-templates.sh` (regenera `pihole/cname.env`) e depois `docker compose up -d pihole`
+(recria só o serviço `pihole`, sem afetar os outros containers da stack).
 
 ## Clouflare
 
@@ -113,15 +121,46 @@ Ele grava `jwt_secret`, `session_secret`, `storage_password`, `storage_encryptio
 
 `authelia/config/configuration.yml.tpl` já usa `${DOMAIN_NAME}` — rode `./render-templates.sh` (na raiz do projeto) pra gerar o `.yml` real com o seu domínio. Se você alterar `CT_AUTHELIA_POSTGRES` ou `CT_AUTHELIA_REDIS` no `.env`, atualize também os hosts hardcoded em `configuration.yml.tpl` (`storage.postgres.address` e `session.redis.host` usam o nome do container diretamente, não uma env var).
 
-`authelia/config/users_database.yml` guarda credencial real (hash de senha, e-mail), então é tratado diferente dos outros `.tpl`: o script gera esse arquivo **só na primeira vez** (a partir de `users_database.yml.tpl`) e nunca mais mexe nele depois — reruns de `render-templates.sh` pulam esse arquivo. Edite sempre o `users_database.yml` (gerado, ignorado no git), nunca o `.tpl`, senão o hash real acaba indo pro git.
+### LDAP (lldap)
 
-Gera o hash da senha do usuário:
+A Authelia autentica contra um backend `ldap`, servido por um **lldap** (`lldap/compose.yml`), que
+sobe junto no mesmo stack. Gera os secrets dele com:
 
 ```bash
-docker run --rm authelia/authelia:4.39 authelia crypto hash generate argon2 --password 'suasenha'
+./lldap/generate-secrets.sh
 ```
 
-E cola em `users_database.yml`, no campo `password:` do usuário. O nome do usuário é a chave sob `users:` (por padrão `authelia`) — é esse nome que você usa pra logar, não o e-mail.
+Isso grava `jwt_secret`, `key_seed` e `user_pass` (senha do usuário `admin` da UI do lldap) em
+`secrets/lldap/`. `secrets/authelia/ldap_password` (senha do bind user que a Authelia usa pra
+consultar o diretório) é gerado junto com os outros secrets da Authelia, por
+`./authelia/generate-secrets.sh`.
+
+Depois de subir o lldap pela primeira vez, alguns passos manuais (não dá pra automatizar via
+compose, precisa da UI do lldap):
+
+0. **Chicken-and-egg do primeiro acesso:** o router `ldap-secure` em `lldap/compose.yml` já vem
+   protegido pelo middleware `authelia@docker`. Mas nesse ponto a Authelia ainda não consegue
+   autenticar ninguém (o bind user dela no LDAP nem existe ainda), então ela bloquearia o próprio
+   acesso à UI do lldap. Comente temporariamente a linha
+   `traefik.http.routers.ldap-secure.middlewares=authelia@docker` em `lldap/compose.yml` e rode
+   `docker compose up -d lldap` antes dos passos abaixo. Descomente e rode
+   `docker compose up -d lldap` de novo só no final, depois que o login em `auth.${DOMAIN_NAME}`
+   já estiver funcionando.
+1. Login em `https://ldap.${DOMAIN_NAME}` com o usuário `admin` e a senha de
+   `secrets/lldap/user_pass`.
+2. Criar o grupo `admins` em Groups.
+3. Criar seus usuários (displayname, email, senha) e adicioná-los ao grupo `admins`.
+4. Criar um usuário de serviço `authelia` — esse é o bind user que a Authelia usa pra consultar o
+   diretório (nunca usar a conta `admin` pra isso):
+   - **Adicione-o ao grupo builtin `lldap_strict_readonly`.** Sem isso o bind até funciona, mas o
+     lldap trata a conta como "unprivileged" e limita o resultado de qualquer busca LDAP a ela
+     mesma — a Authelia consegue bindar normalmente, mas responde "user not found" toda vez que
+     alguém tenta logar (log da Authelia mostra o bind ok, mas nenhum outro usuário nunca é
+     encontrado).
+   - A senha do usuário `authelia` (deve ser igual ao conteúdo de `secrets/authelia/ldap_password`)
+     só dá pra setar pela UI (Users → `authelia` → "Reset/Set password"). O lldap usa o protocolo
+     OPAQUE (PAKE) pra registrar senha, com a matemática rodando no navegador (WASM) — não existe
+     endpoint de API que aceite senha em texto puro, então não dá pra automatizar isso num script.
 
 Depois de subir o stack, `auth.${DOMAIN_NAME}` deve responder com o portal de login do Authelia.
 

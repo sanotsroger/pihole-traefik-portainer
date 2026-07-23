@@ -12,17 +12,20 @@ totp:
   issuer: ${DOMAIN_NAME}
 
 authentication_backend:
-  file:
-    path: /config/users_database.yml
-    password:
-      algorithm: argon2
-      argon2:
-        variant: argon2id
-        iterations: 3
-        memory: 65536
-        parallelism: 4
-        key_length: 32
-        salt_length: 16
+  ldap:
+    implementation: 'lldap'
+    address: 'ldap://lldap:3890'
+    base_dn: '${LLDAP_BASE_DN}'
+    additional_users_dn: 'ou=people'
+    additional_groups_dn: 'ou=groups'
+    users_filter: '(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))'
+    groups_filter: '(&(member={dn})(objectClass=groupOfNames))'
+    user: 'uid=authelia,ou=people,${LLDAP_BASE_DN}'
+    attributes:
+      username: uid
+      display_name: cn
+      mail: mail
+      member_of: memberOf
 
 access_control:
   default_policy: deny

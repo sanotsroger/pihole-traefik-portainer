@@ -14,12 +14,14 @@ services:
       AUTHELIA_SESSION_REDIS_PASSWORD_FILE: /run/secrets/authelia_redis_password
       AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/authelia_storage_password
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/authelia_ldap_password
     secrets:
       - authelia_jwt_secret
       - authelia_session_secret
       - authelia_redis_password
       - authelia_storage_password
       - authelia_storage_encryption_key
+      - authelia_ldap_password
     volumes:
       - ./config:/config
     healthcheck:
@@ -55,6 +57,7 @@ services:
     depends_on:
       - authelia-postgres
       - authelia-redis
+      - lldap
 
   authelia-postgres:
     image: postgres:${POSTGRES_VERSION}

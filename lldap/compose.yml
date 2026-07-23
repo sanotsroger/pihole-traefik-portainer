@@ -1,0 +1,48 @@
+services:
+  lldap:
+    image: lldap/lldap:${LLDAP_VERSION}
+    container_name: ${CT_LLDAP}
+    restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: ${CT_LLDAP_IP}
+    environment:
+      UID: ${PUID}
+      GID: ${PGID}
+      TZ: ${TIMEZONE}
+      LLDAP_JWT_SECRET_FILE: /run/secrets/lldap_jwt_secret
+      LLDAP_KEY_SEED_FILE: /run/secrets/lldap_key_seed
+      LLDAP_LDAP_USER_PASS_FILE: /run/secrets/lldap_user_pass
+      LLDAP_LDAP_BASE_DN: ${LLDAP_BASE_DN}
+    secrets:
+      - lldap_jwt_secret
+      - lldap_key_seed
+      - lldap_user_pass
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:17170/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ldap.entrypoints=http"
+      - "traefik.http.routers.ldap.rule=Host(`ldap.${DOMAIN_NAME}`)"
+      - "traefik.http.middlewares.ldap-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.ldap.middlewares=ldap-https-redirect"
+      - "traefik.http.routers.ldap-secure.entrypoints=https"
+      - "traefik.http.routers.ldap-secure.rule=Host(`ldap.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.ldap-secure.tls=true"
+      - "traefik.http.routers.ldap-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.ldap-secure.middlewares=authelia@docker"
+      - "traefik.http.services.ldap.loadbalancer.server.port=17170"

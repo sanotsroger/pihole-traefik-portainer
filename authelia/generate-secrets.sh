@@ -30,15 +30,16 @@ generate session_secret 64
 generate storage_password 32
 generate storage_encryption_key 32
 generate redis_password 32
+generate ldap_password 32
 
 cat <<EOF
 
 Secrets written to $SECRETS_DIR
 
-Ainda faltam passos manuais antes de subir o stack:
-  1. Gerar o hash da senha do usuário e colar em authelia/config/users_database.yml:
-       docker run --rm authelia/authelia:\${AUTHELIA_VERSION} authelia crypto hash generate argon2 --password 'suasenha'
-  2. Substituir 'domain.com' pelo seu domínio real em:
-       authelia/config/configuration.yml
-       authelia/config/users_database.yml
+Ainda faltam passos manuais antes de subir o stack (ver docs/ldpa-migration.md):
+  1. Substituir 'domain.com' pelo seu domínio real em authelia/config/configuration.yml.
+  2. Subir o lldap (./lldap/generate-secrets.sh e o serviço lldap) e, na UI dele, criar o
+     grupo 'admins', recriar os usuários e criar o usuário de serviço 'authelia' com a senha
+     igual ao conteúdo de secrets/authelia/ldap_password (esse é o bind user que a Authelia
+     usa para consultar o diretório — nunca usar a conta 'admin' para isso).
 EOF

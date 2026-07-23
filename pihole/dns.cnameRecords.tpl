@@ -7,3 +7,4 @@ registry.${DOMAIN_NAME},docker.local
 gitlab.${DOMAIN_NAME},docker.local
 pve.${DOMAIN_NAME},docker.local
 auth.${DOMAIN_NAME},docker.local
+ldap.${DOMAIN_NAME},docker.local

@@ -28,21 +28,6 @@ command -v envsubst >/dev/null || { echo "error: envsubst not found (install get
 # untouched instead of being blanked out.
 SUBST_VARS="$(grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_FILE" | sed -e 's/=$//' -e 's/^/$/' | tr '\n' ' ')"
 
-# authelia/config/users_database.yml holds real credentials (password hash,
-# email) once you edit it. It must never be silently overwritten by a
-# re-render, so it's rendered once from its .tpl (if missing) and skipped on
-# every run after that.
-USERS_DB_TPL="$ROOT_DIR/authelia/config/users_database.yml.tpl"
-USERS_DB="$ROOT_DIR/authelia/config/users_database.yml"
-if [[ -f "$USERS_DB_TPL" ]]; then
-  if [[ -f "$USERS_DB" ]]; then
-    echo "skip:     authelia/config/users_database.yml (already exists, edit it directly)"
-  else
-    envsubst "$SUBST_VARS" < "$USERS_DB_TPL" > "$USERS_DB"
-    echo "rendered: authelia/config/users_database.yml (first time)"
-  fi
-fi
-
 count=0
 
 # authelia/config/configuration.yml.tpl has no user-editable per-file content
@@ -52,7 +37,7 @@ while IFS= read -r -d '' tpl; do
   envsubst "$SUBST_VARS" < "$tpl" > "$out"
   echo "rendered: ${out#"$ROOT_DIR"/}"
   count=$((count + 1))
-done < <(find "$ROOT_DIR/authelia/config" -maxdepth 1 -name '*.tpl' -not -name 'users_database.yml.tpl' -print0)
+done < <(find "$ROOT_DIR/authelia/config" -maxdepth 1 -name '*.tpl' -print0)
 
 # traefik/data/templates/*.yml.tpl are rendered into traefik/data/config.d/.
 # Once a rendered file exists there it's assumed to be hand-edited (real
