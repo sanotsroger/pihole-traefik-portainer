@@ -56,6 +56,9 @@ manualmente na UI:
   (default `BIND`).
 - **`dns.hosts`** (IP real da máquina + `docker.local`): variável `PIHOLE_HOST_IP` no `.env`.
 - **`dhcp.start`**: variável `PIHOLE_DHCP_START` no `.env`.
+- **Senha de admin** (`webserver.api.password`): variável `PIHOLE_PASSWORD` no `.env`. Só é
+  aplicada no primeiro start (ou se `pihole/config/etc-pihole` for apagado) — trocar o valor no
+  `.env` depois disso não muda a senha já persistida.
 
 Depois de ajustar o `.env` e/ou `pihole/dns.cnameRecords`, rode `./render-templates.sh` e suba (ou
 reinicie) o container do Pi-hole.

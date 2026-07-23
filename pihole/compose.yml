@@ -17,6 +17,8 @@ services:
       # Local A record for docker.local -> real host IP
       FTLCONF_dns_hosts: "${PIHOLE_HOST_IP} docker.local"
       FTLCONF_dhcp_start: ${PIHOLE_DHCP_START}
+      # Senha de admin da UI/API, definida no primeiro start a partir do .env
+      FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD}
     # FTLCONF_dns_cnameRecords, generated from ./dns.cnameRecords by ./render-templates.sh
     env_file:
       - ./cname.env
