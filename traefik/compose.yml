@@ -43,6 +43,6 @@ services:
       - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${DOMAIN_NAME}"
       - "traefik.http.routers.traefik-secure.service=api@internal"
       # Add authelia
-      # - "traefik.http.routers.traefik-secure.middlewares=authelia@docker"
+      - "traefik.http.routers.ldap-secure.middlewares=authelia@docker"
     depends_on:
       - ${CT_PIHOLE}

@@ -169,7 +169,7 @@ Depois de subir o stack, `auth.${DOMAIN_NAME}` deve responder com o portal de lo
 Nenhum serviço fica protegido por padrão. Para exigir login do Authelia em outro serviço (ex: Portainer), adicione a label no `compose.yml` daquele serviço:
 
 ```yaml
-- "traefik.http.routers.portainer.middlewares=authelia@docker"
+- "traefik.http.routers.ldap-secure.middlewares=authelia@docker"
 ```
 
 Se o router já tiver outras middlewares, separe por vírgula.
