@@ -84,7 +84,7 @@ Access this link to [create token](https://dash.cloudflare.com/profile/api-token
 Before uploading the container, create the following directories and files, giving them the necessary permissions.
 
 ```bash
-mkdir -p traefik/data && cd traefik/data && touch acme.json && chmod 600 acme.json
+mkdir -p traefik/data && touch traefik/data/acme.json && chmod 600 traefik/data/acme.json
 ```
 
 Pra expor um novo host externo (não gerenciado pelo Docker, ex: Proxmox, GitLab), crie um arquivo em `traefik/data/templates/<nome>.yml.tpl` usando `${DOMAIN_NAME}` no `Host()`, seguindo os exemplos existentes (`pve.yml.tpl`, `registry.yml.tpl`, etc.), e rode `./render-templates.sh` pra gerar `traefik/data/config.d/<nome>.yml`.
@@ -108,7 +108,8 @@ diretório for criado com outro dono, o container não consegue escrever no volu
 
 ```bash
 mkdir -p authelia/postgres authelia/redis
-sudo chown 999:999 authelia/postgres authelia/redis
+sudo chmod +w authelia/postgres authelia/redis
+sudo chmod 0775 authelia/postgres authelia/redis
 ```
 
 Gera os secrets reais (nunca commitados, veja `.gitignore`) com o script:
@@ -173,3 +174,29 @@ Nenhum serviço fica protegido por padrão. Para exigir login do Authelia em out
 ```
 
 Se o router já tiver outras middlewares, separe por vírgula.
+
+## Tasks
+
+Subo o Pihole primeiro para incluir a configurações.
+
+```bash
+docker compose up -d pihole unbound portainer
+```
+
+Acesse para iniciar as configurações <http://localhost:8001/admin/login>
+
+Em `Local DNS records` adicione em:
+
+- Domain: docker.local
+- IP: 192.168.0.2
+
+Em `DNS server settings` para propriedade `dns.cnameRecords` adicione os dominios iniciais.
+
+```txt
+pihole.${DOMAIN_NAME},docker.local
+traefik.${DOMAIN_NAME},docker.local
+portainer.${DOMAIN_NAME},docker.local
+pve.${DOMAIN_NAME},docker.local
+auth.${DOMAIN_NAME},docker.local
+ldap.${DOMAIN_NAME},docker.local
+```
